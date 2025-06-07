@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إجابات الطلاب</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            text-align: right;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+        button {
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto 0;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #006699;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .hidden {
+            display: none;
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+        .file-label {
+            display: inline-block;
+            padding: 8px 12px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .file-label:hover {
+            background-color: #e0e0e0;
+        }
+        .preview-container {
+            margin-top: 10px;
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .remove-image {
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>نظام إجابات الطلاب</h1>
+        
+        <div id="nameSection" class="form-group">
+            <label for="studentName">اسم الطالب:</label>
+            <input type="text" id="studentName" placeholder="اكتب اسمك هنا">
+            <button onclick="showQuestionSection()">التالي</button>
+        </div>
+        
+        <div id="questionSection" class="form-group hidden">
+            <label for="question">السؤال:</label>
+            <textarea id="question" placeholder="اكتب السؤال هنا..."></textarea>
+            
+            <div class="file-input">
+                <label class="file-label">
+                    إرفاق صورة للسؤال (اختياري)
+                    <input type="file" id="questionImage" accept="image/*" style="display: none;" onchange="previewImage('questionImage', 'questionPreview')">
+                </label>
+                <div id="questionPreview" class="preview-container hidden">
+                    <span class="remove-image" onclick="removeImage('questionImage', 'questionPreview')">× إزالة الصورة</span>
+                    <img class="preview-image" id="questionPreviewImage">
+                </div>
+            </div>
+            
+            <label for="answer">الإجابة:</label>
+            <textarea id="answer" placeholder="اكتب إجابتك هنا..."></textarea>
+            
+            <div class="file-input">
+                <label class="file-label">
+                    إرفاق صورة للإجابة (اختياري)
+                    <input type="file" id="answerImage" accept="image/*" style="display: none;" onchange="previewImage('answerImage', 'answerPreview')">
+                </label>
+                <div id="answerPreview" class="preview-container hidden">
+                    <span class="remove-image" onclick="removeImage('answerImage', 'answerPreview')">× إزالة الصورة</span>
+                    <img class="preview-image" id="answerPreviewImage">
+                </div>
+            </div>
+            
+            <button onclick="submitForm()" id="submitBtn">إرسال الإجابة</button>
+        </div>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // عرض قسم السؤال بعد إدخال الاسم
+        function showQuestionSection() {
+            const studentName = document.getElementById('studentName').value.trim();
+            
+            if (!studentName) {
+                document.getElementById('status').textContent = 'الرجاء إدخال اسم الطالب أولاً';
+                document.getElementById('status').style.color = '#e74c3c';
+                return;
+            }
+            
+            document.getElementById('nameSection').classList.add('hidden');
+            document.getElementById('questionSection').classList.remove('hidden');
+            document.getElementById('status').textContent = '';
+        }
+
+        // معاينة الصورة المرفوعة
+        function previewImage(inputId, previewContainerId) {
+            const input = document.getElementById(inputId);
+            const previewContainer = document.getElementById(previewContainerId);
+            const previewImage = document.getElementById(previewContainerId + 'Image');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // إزالة الصورة المرفوعة
+        function removeImage(inputId, previewContainerId) {
+            document.getElementById(inputId).value = '';
+            document.getElementById(previewContainerId).classList.add('hidden');
+        }
+
+        // إرسال البيانات إلى Google Sheets
+        async function submitForm() {
+    const studentName = document.getElementById('studentName').value.trim();
+    const question = document.getElementById('question').value.trim();
+    const answer = document.getElementById('answer').value.trim();
+    
+    if (!question || !answer) {
+        document.getElementById('status').textContent = 'الرجاء إدخال السؤال والإجابة';
+        document.getElementById('status').style.color = '#e74c3c';
+        return;
+    }
+    
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('status').textContent = 'جاري حفظ البيانات...';
+    document.getElementById('status').style.color = '#3498db';
+    
+    try {
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbwMKkvyYpMZsFtByTo4pllaIKkmsmwtxgkmm_9elZdsnaAiZput6epHxEjK0mD3ABmz/exec'; // استبدل برابط السكربت الخاص بك
+        
+        const formData = new FormData();
+        formData.append('name', studentName);
+        formData.append('question', question);
+        formData.append('answer', answer);
+        
+        // معالجة صورة السؤال إذا وجدت
+        const questionImage = document.getElementById('questionImage').files[0];
+        if (questionImage) {
+            const questionImageBase64 = await getBase64(questionImage);
+            formData.append('questionImage', questionImageBase64);
+        }
+        
+        // معالجة صورة الإجابة إذا وجدت
+        const answerImage = document.getElementById('answerImage').files[0];
+        if (answerImage) {
+            const answerImageBase64 = await getBase64(answerImage);
+            formData.append('answerImage', answerImageBase64);
+        }
+        
+        const response = await fetch(scriptUrl, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.result === 'success') {
+            document.getElementById('questionSection').classList.add('hidden');
+            document.getElementById('status').textContent = 'تم الارسال بنجاح!';
+            document.getElementById('status').style.color = '#27ae60';
+            
+            // إعادة تعيين النموذج
+            resetForm();
+            
+            // إظهار قسم الاسم مرة أخرى
+            setTimeout(() => {
+                document.getElementById('nameSection').classList.remove('hidden');
+                document.getElementById('status').textContent = '';
+            }, 3000);
+        } else {
+            document.getElementById('status').textContent = 'حدث خطأ أثناء الحفظ! ' + result.message;
+            document.getElementById('status').style.color = '#e74c3c';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('status').textContent = 'حدث خطأ في الاتصال بالخادم!';
+        document.getElementById('status').style.color = '#e74c3c';
+    } finally {
+        document.getElementById('submitBtn').disabled = false;
+    }
+}
+
+// دالة لتحويل الصورة إلى base64
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// دالة لإعادة تعيين النموذج
+function resetForm() {
+    document.getElementById('studentName').value = '';
+    document.getElementById('question').value = '';
+    document.getElementById('answer').value = '';
+    document.getElementById('questionImage').value = '';
+    document.getElementById('answerImage').value = '';
+    document.getElementById('questionPreview').classList.add('hidden');
+    document.getElementById('answerPreview').classList.add('hidden');
+}
+    </script>
+</body>
+</html>
